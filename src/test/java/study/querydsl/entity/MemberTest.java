@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
+import com.querydsl.core.QueryFactory;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 
@@ -49,6 +50,8 @@ public class MemberTest {
 
     @Test
     public void before() {
+        queryFactory = new JPAQueryFactory(em);
+        
         Team teamA = new Team("teamA");
         Team teamB = new Team("teamB");
         em.persist(teamA);
@@ -78,7 +81,7 @@ public class MemberTest {
     JPAQueryFactory queryFactory;
     @Test
     public void startQuerydsl() { // 자바컴파일시점에 오류를 잡을 수 있는 강점.
-        queryFactory = new JPAQueryFactory(em); // before 에 넣어도 동시성 문제가 없다.
+//        queryFactory = new JPAQueryFactory(em); // before 에 넣어도 동시성 문제가 없다.
         //QMember 없으면 Eclipse 기준 [gradle tasks] > [project 선택] > [build폴더] > [build]
 //        QMember m = new QMember("m");
         
@@ -87,6 +90,29 @@ public class MemberTest {
                 .from(QMember.member)
                 .where(QMember.member.username.eq("member1"))
                 .fetchOne();
+
+        assertThat(findMember.getUsername()).isEqualTo("member1");
+    }
+    
+    @Test
+    public void search() {
+        Member findMember = queryFactory
+        .selectFrom(QMember.member)
+        .where(QMember.member.username.eq("member1")
+                .and(QMember.member.age.eq(10)))
+        .fetchOne();
+
+        assertThat(findMember.getUsername()).isEqualTo("member1");
+    }    
+    @Test
+    public void searchAndParam() {
+        Member findMember = queryFactory
+        .selectFrom(QMember.member)
+        .where(
+                QMember.member.username.eq("member1"), // , 이 and와 같다
+                QMember.member.age.eq(10)
+        )
+        .fetchOne();
 
         assertThat(findMember.getUsername()).isEqualTo("member1");
     }
