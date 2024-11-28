@@ -1,7 +1,6 @@
 package study.querydsl.entity;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import java.util.Iterator;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,6 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
@@ -414,6 +414,39 @@ public class MemberTest {
         
         for (Tuple tuple : result) {
             System.out.println("sub query - " + tuple);
+        }
+    }
+    
+    @Test
+    public void basicCase() {
+        List<String> result = queryFactory
+            .select(
+                    QMember.member.age
+                    .when(10).then("열살")
+                    .when(20).then("스무살")
+                    .otherwise("기타")
+            )
+            .from(QMember.member)
+            .fetch();
+        for (String s : result) {
+            System.out.println("s="+s);
+        }
+    }
+    
+    @Test
+    public void complexCase() {
+
+        List<String> result = queryFactory
+            .select(
+                    new CaseBuilder()
+                    .when(QMember.member.age.between(0, 20)).then("0~20살")
+                    .when(QMember.member.age.between(21, 30)).then("21~30살")
+                    .otherwise("기타")
+            )
+            .from(QMember.member)
+            .fetch();
+        for (String s : result) {
+            System.out.println("s="+s);
         }
     }
 }
