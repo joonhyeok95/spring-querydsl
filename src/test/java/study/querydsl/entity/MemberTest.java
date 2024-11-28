@@ -75,17 +75,17 @@ public class MemberTest {
         assertThat(findMember.getUsername()).isEqualTo("member1");
         
     }
-    
+    JPAQueryFactory queryFactory;
     @Test
     public void startQuerydsl() { // 자바컴파일시점에 오류를 잡을 수 있는 강점.
-        JPAQueryFactory queryFactory = new JPAQueryFactory(em);
+        queryFactory = new JPAQueryFactory(em); // before 에 넣어도 동시성 문제가 없다.
         //QMember 없으면 Eclipse 기준 [gradle tasks] > [project 선택] > [build폴더] > [build]
-        QMember m = new QMember("m");
+//        QMember m = new QMember("m");
         
         Member findMember = queryFactory
-                .select(m)
-                .from(m)
-                .where(m.username.eq("member1"))
+                .select(QMember.member)
+                .from(QMember.member)
+                .where(QMember.member.username.eq("member1"))
                 .fetchOne();
 
         assertThat(findMember.getUsername()).isEqualTo("member1");
