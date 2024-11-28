@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import com.querydsl.core.QueryResults;
+import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 
@@ -191,5 +192,46 @@ public class MemberTest {
         assertThat(queryResult.getOffset()).isEqualTo(1);
         assertThat(queryResult.getResults().size()).isEqualTo(2);
 
+    }
+    
+    @Test
+    public void aggregation() {
+        // querydsl 패키지의 Tuple
+        List<Tuple> result = queryFactory
+            .select(
+                    QMember.member.count(),
+                    QMember.member.age.sum(),
+                    QMember.member.age.avg(),
+                    QMember.member.age.max(),
+                    QMember.member.age.min()
+            )
+            .from(QMember.member)
+            .fetch();
+        Tuple tuple = result.get(0);
+        assertThat(tuple.get(QMember.member.count())).isEqualTo(4);
+        assertThat(tuple.get(QMember.member.age.sum())).isEqualTo(100);
+        assertThat(tuple.get(QMember.member.age.avg())).isEqualTo(25);
+        assertThat(tuple.get(QMember.member.age.max())).isEqualTo(40);
+        assertThat(tuple.get(QMember.member.age.min())).isEqualTo(10);
+        
+    }
+    
+    @Test
+    public void group() throws Exception {
+        List<Tuple> result = queryFactory
+                    .select(QTeam.team.name, QMember.member.age.avg())
+                    .from(QMember.member)
+                    .join(QMember.member.team, QTeam.team)
+                    .groupBy(QTeam.team.name)
+                    .fetch();
+        
+        Tuple teamA = result.get(0);
+        Tuple teamB = result.get(1);
+        
+        assertThat(teamA.get(QTeam.team.name)).isEqualTo("teamA");
+        assertThat(teamA.get(QMember.member.age.avg())).isEqualTo(15); // 10 + 20 / 2
+        
+        assertThat(teamB.get(QTeam.team.name)).isEqualTo("teamB");
+        assertThat(teamB.get(QMember.member.age.avg())).isEqualTo(35); // 30 + 40 / 2
     }
 }
