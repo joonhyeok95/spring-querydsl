@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
-import com.querydsl.core.QueryFactory;
+import com.querydsl.core.QueryResults;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 
@@ -103,7 +103,8 @@ public class MemberTest {
         .fetchOne();
 
         assertThat(findMember.getUsername()).isEqualTo("member1");
-    }    
+    }
+    
     @Test
     public void searchAndParam() {
         Member findMember = queryFactory
@@ -115,5 +116,32 @@ public class MemberTest {
         .fetchOne();
 
         assertThat(findMember.getUsername()).isEqualTo("member1");
+    }
+    
+    @Test
+    public void resultFetch() {
+        // 리스트
+        List<Member> fetch = queryFactory
+                .selectFrom(QMember.member)
+                .fetch();
+        // 단건 - 두개이상이 조회되면 NonUniqueResultException
+        Member fetchOne = queryFactory
+                .selectFrom(QMember.member)
+                .fetchOne();
+        // 단건 - 첫번째
+        Member fetchFirst = queryFactory
+                .selectFrom(QMember.member)
+                .fetchFirst();
+        
+        // 쿼리 두방 나감
+        QueryResults<Member> results = queryFactory
+                .selectFrom(QMember.member)
+                .fetchResults(); // deprecated
+        results.getTotal();
+        List<Member> content = results.getResults();
+        
+        long total = queryFactory
+                .selectFrom(QMember.member)
+                .fetchCount(); // deprecated
     }
 }
