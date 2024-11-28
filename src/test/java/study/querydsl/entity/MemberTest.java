@@ -53,7 +53,6 @@ public class MemberTest {
     }
     
     @BeforeEach
-
     @Test
     public void before() {
         queryFactory = new JPAQueryFactory(em);
