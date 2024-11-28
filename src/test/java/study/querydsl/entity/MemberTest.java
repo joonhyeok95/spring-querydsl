@@ -175,4 +175,21 @@ public class MemberTest {
         
         
     }
+    
+    @Test
+    public void paging1() {
+        QueryResults<Member> queryResult = queryFactory
+                .selectFrom(QMember.member)
+                .orderBy(QMember.member.age.desc())
+                .offset(1) // paging
+                .limit(2) // paging
+                .fetchResults();
+        // 페이징쿼리가 복잡하면 카운팅 쿼리를 별도로 분리해야함
+        
+        assertThat(queryResult.getTotal()).isEqualTo(4);
+        assertThat(queryResult.getLimit()).isEqualTo(2);
+        assertThat(queryResult.getOffset()).isEqualTo(1);
+        assertThat(queryResult.getResults().size()).isEqualTo(2);
+
+    }
 }
