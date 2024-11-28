@@ -1,6 +1,7 @@
 package study.querydsl.entity;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import java.util.Iterator;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -263,4 +264,44 @@ public class MemberTest {
             .extracting("username")
             .containsExactly("teamA", "teamB");
     }
+ // 세타조인 : 연관관계가 없어도 조인할 수 있는 경우
+    // ex: 회원의 이름이 팀 이름과 같은 대상 외부 조회
+    @Test
+    public void theta_join_no_relation() {
+        em.persist(new Member("teamA"));
+        em.persist(new Member("teamB"));
+        em.persist(new Member("teamC"));
+        
+        List<Tuple> result = queryFactory
+            .select(QMember.member, QTeam.team)
+            .from(QMember.member)
+            .leftJoin(QTeam.team).on(QMember.member.username.eq(QTeam.team.name))
+            .fetch();
+        
+        for (Tuple tuple : result) {
+            System.out.println("세타..tuple = " + tuple);
+        }
+        
+//        assertThat(result)
+//            .extracting("username")
+//            .containsExactly("teamA", "teamB");
+    }
+    /*
+     * ex) 회원과 팀을 조인하면서, 팀 이름이 teamA인 팀만 조인, 회원은 모두 조회
+     * JPQL: select m, t from Member m left join m.team t on t.name = 'teamA'
+     */
+    @Test
+    public void join_on_filtering() {
+        List<Tuple> result = queryFactory
+                .select(QMember.member, QTeam.team)
+                .from(QMember.member)
+                .leftJoin(QMember.member.team, QTeam.team)
+                    .on(QTeam.team.name.eq("teamA"))
+                    .fetch();
+        for (Tuple tuple : result) {
+            System.out.println("tuple = " + tuple);
+        }
+    }
+    
+    
 }
