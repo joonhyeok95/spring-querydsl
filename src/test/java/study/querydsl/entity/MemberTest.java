@@ -12,6 +12,8 @@ import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceUnit;
 
 @SpringBootTest
 @Transactional
@@ -303,5 +305,34 @@ public class MemberTest {
         }
     }
     
+    @PersistenceUnit
+    EntityManagerFactory emf;
     
+    @Test
+    public void fetchJoinNo() {
+        em.flush();
+        em.clear();
+        
+        Member findMember = queryFactory
+            .selectFrom(QMember.member)
+            .where(QMember.member.username.eq("member1"))
+            .fetchOne();
+        
+        boolean loaded = emf.getPersistenceUnitUtil().isLoaded(findMember.getTeam());
+        assertThat(loaded).as("패치조인 미적용").isFalse();
+    }    
+    @Test
+    public void fetchJoinUse() {
+        em.flush();
+        em.clear();
+        
+        Member findMember = queryFactory
+            .selectFrom(QMember.member)
+            .join(QMember.member.team, QTeam.team).fetchJoin()
+            .where(QMember.member.username.eq("member1"))
+            .fetchOne();
+        
+        boolean loaded = emf.getPersistenceUnitUtil().isLoaded(findMember.getTeam());
+        assertThat(loaded).as("패치조인 적용").isTrue();
+    }
 }
