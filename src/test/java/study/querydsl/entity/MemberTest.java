@@ -10,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -334,5 +335,85 @@ public class MemberTest {
         
         boolean loaded = emf.getPersistenceUnitUtil().isLoaded(findMember.getTeam());
         assertThat(loaded).as("패치조인 적용").isTrue();
+    }
+    
+    /*
+     * 나이가 가장 많은 회원 조회
+     */
+    @Test
+    public void subQuery() {
+        QMember memberSub = new QMember("memberSub");
+        
+        List<Member> result = queryFactory
+            .selectFrom(QMember.member)
+            .where(QMember.member.age.eq(
+                    JPAExpressions
+                        .select(memberSub.age.max())
+                        .from(memberSub)
+                    ))
+            .fetch();
+        
+        assertThat(result).extracting("age")
+            .containsExactly(40);
+    }
+
+    /*
+     * 나이가 평균 이상인 회원 조회
+     */
+    @Test
+    public void subQueryGoe() {
+        QMember memberSub = new QMember("memberSub");
+        
+        List<Member> result = queryFactory
+            .selectFrom(QMember.member)
+            .where(QMember.member.age.goe(
+                    JPAExpressions
+                        .select(memberSub.age.avg())
+                        .from(memberSub)
+                    ))
+            .fetch();
+        
+        assertThat(result).extracting("age")
+            .containsExactly(30, 40);
+    }
+    /*
+     * 나이가 10살을 넘은 회원 조회 ( where 절에 써보기 ) 
+     */
+    @Test
+    public void subQueryIn() {
+        QMember memberSub = new QMember("memberSub");
+        
+        List<Member> result = queryFactory
+            .selectFrom(QMember.member)
+            .where(QMember.member.age.in(
+                    JPAExpressions
+                        .select(memberSub.age)
+                        .from(memberSub)
+                        .where(memberSub.age.gt(10)) // 나이가 10보다 큰사람
+                    ))
+            .fetch();
+        
+        assertThat(result).extracting("age")
+            .containsExactly(20, 30, 40);
+    }
+    /*
+     * 나이가 10살을 넘은 회원 조회 ( 필드에 써보기 ) 
+     */
+    @Test
+    public void selectSubQuery() {
+        QMember memberSub = new QMember("memberSub");
+        
+        List<Tuple> result = queryFactory
+            .select(QMember.member.username,
+                    JPAExpressions
+                        .select(memberSub.age.avg())
+                        .from(memberSub)
+                )
+            .from(QMember.member)
+            .fetch();
+        
+        for (Tuple tuple : result) {
+            System.out.println("sub query - " + tuple);
+        }
     }
 }
