@@ -148,4 +148,13 @@ public class QuerydslBasicTest {
             System.out.println(memberDto);
         }
     }
+    
+    // QueryProjection
+//    @Test
+//    public void findDtoByQueryProjection() {
+//        List<MemberDto> result = queryFactory
+//        .select(new QMemberDto(QMember.member.username, QMember.member.age))
+//        .from(QMember.member)
+//        .fetch();
+//    }
 }
