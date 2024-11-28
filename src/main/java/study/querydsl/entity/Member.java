@@ -36,7 +36,7 @@ public class Member {
     }
 
     public Member(String username, int age) {
-        this(username, 0, null);
+        this(username, age, null);
 //        this.username = username;
 //        this.age = age;
     }
