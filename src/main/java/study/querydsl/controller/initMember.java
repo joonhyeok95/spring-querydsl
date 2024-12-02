@@ -7,7 +7,6 @@ import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
-import study.querydsl.controller.initMember.InitMemberService;
 import study.querydsl.entity.Member;
 import study.querydsl.entity.Team;
 
