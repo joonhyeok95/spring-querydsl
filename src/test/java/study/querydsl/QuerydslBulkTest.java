@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import study.querydsl.entity.Member;
@@ -64,6 +65,33 @@ public class QuerydslBulkTest {
                 .execute();
     }
     
+    // SQL Function 호출
+    @Test
+    public void sqlFunction() {
+        List<String> result = queryFactory
+            .select(Expressions.stringTemplate("function('replace', {0}, {1}, {2})"
+                    , QMember.member.username, "member", "M"))
+            .from(QMember.member)
+            .fetch();
+        
+        for (String string : result) {
+            System.out.println("replace = " + string);
+        }
+    }
+    @Test
+    public void sqlFunction2() {
+        List<String> result = queryFactory
+            .select(QMember.member.username)
+            .from(QMember.member)
+            // sql function (ansi 표준 함수들을 활용함)
+//            .where(QMember.member.username.eq(Expressions.stringTemplate("function('lower', {0})", QMember.member.username)))
+            // query dsl 로 변경
+            .where(QMember.member.username.eq(QMember.member.username.lower()))
+            .fetch();
+        for (String string : result) {
+            System.out.println("lower = " + string);
+        }
+    }
 
     // querydsl 중급 문법
     @BeforeEach
